@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Раскомментировали фабрику и указали генерацию 100 пользователей
+        User::factory(100)->create();
 
         $this->call([
             CategorySeeder::class,
