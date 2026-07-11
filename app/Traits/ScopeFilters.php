@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 trait ScopeFilters
 {
@@ -19,11 +20,20 @@ trait ScopeFilters
             ->when($request->input('price_to'), function ($query, $priceTo) {
                 $query->where('price', '<=', $priceTo);
             })
-            ->when($request->input('date_from'), function ($query, $dateFrom) {
-                $query->whereDate('created_at', '>=', $dateFrom . ' 00:00:00');
+            // Инициатива: Использование whereBetween для фильтрации по интервалу дат создания продуктов
+            ->when($request->input('date_from') && $request->input('date_to'), function ($query) use ($request) {
+                $start = Carbon::parse($request->input('date_from'))->startOfDay();
+                $end = Carbon::parse($request->input('date_to'))->endOfDay();
+
+                $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when($request->input('date_to'), function ($query, $dateTo) {
-                $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+            // Если передана только дата "от", используем обычное условие "больше или равно"
+            ->when($request->input('date_from') && !$request->input('date_to'), function ($query, $dateFrom) {
+                $query->where('created_at', '>=', Carbon::parse($dateFrom)->startOfDay());
+            })
+            // Если передана только дата "до", используем обычное условие "меньше или равно"
+            ->when(!$request->input('date_from') && $request->input('date_to'), function ($query, $dateTo) {
+                $query->where('created_at', '<=', Carbon::parse($dateTo)->endOfDay());
             })
             ->when($request->input('category'), function ($query, $categoryId) {
                 $query->where('category_id', $categoryId);
