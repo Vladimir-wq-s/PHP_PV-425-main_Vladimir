@@ -7,6 +7,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\CartController;
+use App\Mail\OrderShippedMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 // Главная страница приложения
@@ -30,3 +32,10 @@ Route::post('/cart/{id}/decrease', [CartController::class, 'decrease'])->name('c
 
 // Защита маршрутов брендов через созданный Гейт (Доступ только для админа)
 Route::resource('brands', BrandController::class)->middleware('can:view-admin-panel');
+
+// Маршрут для тестирования отправки почты через систему очередей
+Route::get('/send-test-mail', function () {
+    Mail::to('test@example.com')->send(new OrderShippedMail());
+
+    return 'Письмо успешно добавлено в очередь!';
+});
